@@ -1,0 +1,38 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+$(function() {
+  const array_replace_word = [
+    ["simple", "\uFF61", "。<br>"],
+    ["simple", "\uFF64", "、"],
+    ["link", "標準朝食", "/2019/09/standard-breakfast.html"],
+    ["link", "呪文詠唱", "/2019/09/spell-casting.html"]
+  ]
+  $(document).ready(function() {
+    var length_array_replace_word = 0
+    for (var i in array_replace_word) {
+      length_array_replace_word++
+    }
+    for (var i = length_array_replace_word - 1; i >= 0; i--) {
+      if (array_replace_word[i][0] === 'simple') {
+        $(document).find('.entry-content').each(function(index, el) {
+          const exp1 = new RegExp(array_replace_word[i][1], 'g')
+          var word1 = $(this).html()
+          word1 = word1.replace(exp1, array_replace_word[i][1])
+          $(this).empty()
+          $(this).html(word1)
+        })
+      } else if (array_replace_word[i][0] === 'link') {
+        $(document).find('.entry-content').each(function(index, el) {
+          const exp1 = new RegExp(array_replace_word[i][1], 'g')
+          var word1 = $(this).html()
+          word1 = word1.replace(exp1, '<a href="' + array_replace_word[i][1] + '">' + array_replace_word[i][1] + '</a>')
+          $(this).empty()
+          $(this).html(word1)
+        })
+      } else {
+        console.log('error: first keyword is fault.')
+      }
+    }
+  })
+})
+</script>

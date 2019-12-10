@@ -1,0 +1,58 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+$(function(){
+  $('#myfile').change(function(e){
+    var file = e.target.files[0];
+    console.log(file)
+    var reader = new FileReader();
+
+    if(file.type.indexOf("image") < 0){
+      alert("画像ファイルを指定してください。");
+      return false;
+    }
+    reader.onload = (function(file){
+      return function(e){
+        $("#img1").attr("src", e.target.result);
+        $("#img1").attr("title", file.name);
+//        "#img2" 略
+//        "#img2" 略
+//        "#img3" 略
+//        "#img3" 略
+      };
+    })(file);
+    reader.readAsDataURL(file);
+  });
+  $('.insert-text').on('keyup', function() {
+    var text = $('#' + $(this).attr('id')).val()
+    var number = $(this).attr('id').replace(/.*-/, '')
+    $('#overlap-' + number).text(text)
+  })
+});
+</script>
+<style>
+.stage {
+  position: relative;
+  width: 500px;
+  height: 300px;
+}
+.overlap-text {
+  position: absolute;
+  top: 0;
+}
+</style>
+
+<input type="file" id="myfile"><br>
+<textarea id="text-2" class="insert-text"></textarea><br>
+<textarea id="text-3" class="insert-text"></textarea>
+<p>img1</p>
+<img id="img1" style="width:500px;height:300px;" />
+<div class="stage">
+  <p>img2</p>
+  <img id="img-2" style="width:500px;height:300px;" src="/sample2.jpg" />
+  <p id="overlap-2" class="overlap-text"></p>
+</div>
+<div class="stage">
+  <p>img3</p>
+  <img id="img-3" style="width:500px;height:300px;" src="/sample3.jpg" />
+  <p id="overlap-3" class="overlap-text"></p>
+</div>
