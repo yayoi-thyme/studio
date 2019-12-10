@@ -1,0 +1,129 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+$(function() {
+  const search = $(location).attr('search').slice(1)
+  const character_to_replace = [
+    [" ", ""],
+    [".", ""],
+    [",", ""],
+    ["'", ""],
+    ["\"", ""],
+    ["\/", ""],
+    ["\\", ""],
+    ["(", ""],
+    [")", ""],
+    ["[", ""],
+    ["]", ""],
+    ["{", ""],
+    ["}", ""],
+    ["<", ""],
+    [">", ""],
+    ["。", ""],
+    ["、", ""],
+    ["・", ""],
+    ["（", ""],
+    ["）", ""],
+    ["「", ""],
+    ["」", ""],
+    ["｛", ""],
+    ["｝", ""]
+  ]
+  const replaced_character = '-'
+  const indent_array = ["", "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t"]
+  $.ajax({
+    url: search,
+    dataType: 'text',
+    cache: 'false',
+  })
+  .then(function(data) {
+    // "#" から見出しのレベリングをする
+    const dfr = $.Deferred()
+    const items = data.replace(/^[^#\n].*?$/gm, '').replace(/(\n(?=\n)|\n$)/g, '').replace(/^(?!\n)/, '\n').split('\n')
+    const items_length = items.length
+    var level = new Array(items_length)
+    for (var i = items_length - 1; i >= 1; i--) {
+      level[i] = items[i].replace(/^(#*?)\s.*$/, '$1').length
+    }
+    // 処理した渡し値: items, items_length, level
+    const container = {"items": items, "items_length": items_length, "level": level}
+    dfr.resolve(container)
+    return dfr.promise()
+  })
+  .then(function(data) {
+    // リンク文字列を作る
+    const dfr = $.Deferred()
+    const items = data['items']
+    const items_length = data['items_length']
+    var link = items.concat()
+    for (var i = items_length - 1; i >= 0; i--) {
+      for (var j = character_to_replace.length - 1; j >= 0; j--) {
+        link[i] = link[i].replace(character_to_replace[j][0], character_to_replace[j][1]).replace(/^#*\s(.*?)/, '$1')
+      }
+    }
+    // 処理した渡し値: link
+    const container = {"items": data['items'], "items_length": data['items_length'], "level": data['level'], "link": link}
+    dfr.resolve(container)
+    return dfr.promise()
+  })
+  .then(function(data) {
+    // 見出しレベルを items に適用する
+    const dfr = $.Deferred() 
+    var items = data['items']
+    const level = data['level']
+    const items_length = data['items_length']
+    for (var i = items_length - 1; i >= 1; i--) {
+      items[i] = items[i].replace(/(.*)/, indent_array[level[i] - 1] + '$1')
+    }
+    // 処理した渡し値: items
+    const container = {"items": items, "link": data['link']}
+    dfr.resolve(container)
+    return dfr.promise()
+  })
+  .then(function(data) {
+    // (***)[#***] を作る
+    const dfr = $.Deferred()
+    var items = data['items']
+    const link = data['link']
+    for (var i = items.length - 1; i >= 0; i--) {
+      items[i] = items[i].replace(/^(\t*)#*\s(.*)/, '$1* [$2]') + '(#' + link[i] + ')'
+    }
+    // 処理した渡し値: items
+    const container = {"items": data['items']}
+    dfr.resolve(container)
+    return dfr.promise()
+  })
+  .then(function(data) {
+    // TOC 生成
+    const dfr = $.Deferred()
+    const items = data['items']
+    var toc = ''
+    for (var i = 1; items.length - 1 >= i; i++) {
+      toc = toc + items[i] + '\n'
+    }
+    // 処理した渡し値: 
+    const container = toc
+    dfr.resolve(container)
+    return dfr.promise()
+  }).then(function(data) {
+    // 書き出し
+    const toc = data
+    $('#toc').text(toc)
+  })
+  function generateArrayFilled(length, items, fill) {
+    var array = new Array(length)
+    for (var i = length - 1; i >= 0; i--) {
+      array[i] = new Array(items)
+      for (var j = items - 1; j >= 0; j--) {
+        array[i][j] = fill
+      }
+    }
+    return array
+  }
+})
+</script>
+<style>
+
+</style>
+<body>
+<pre id="toc"></pre>
+</body>
