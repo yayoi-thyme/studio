@@ -28,86 +28,59 @@ $(function() {
     ["｛", ""],
     ["｝", ""]
   ]
-  const replaced_character = '-'
-  const indent_array = ["", "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t"]
+  const indent_character = "\t"
+  var list_array = {}
+  var list_array_length = 0
   $.ajax({
     url: search,
     dataType: 'text',
     cache: 'false',
   })
   .then(function(data) {
-    // "#" から見出しのレベリングをする
-    const dfr = $.Deferred()
-    const items = data.replace(/^[^#\n].*?$/gm, '').replace(/(\n(?=\n)|\n$)/g, '').replace(/^(?!\n)/, '\n').split('\n')
-    const items_length = items.length
-    var level = new Array(items_length)
-    for (var i = items_length - 1; i >= 1; i--) {
-      level[i] = items[i].replace(/^(#*?)\s.*$/, '$1').length
-    }
-    // 処理した渡し値: items, items_length, level
-    const container = {"items": items, "items_length": items_length, "level": level}
-    dfr.resolve(container)
-    return dfr.promise()
-  })
-  .then(function(data) {
-    // リンク文字列を作る
-    const dfr = $.Deferred()
-    const items = data['items']
-    const items_length = data['items_length']
-    var link = items.concat()
-    for (var i = items_length - 1; i >= 0; i--) {
-      for (var j = character_to_replace.length - 1; j >= 0; j--) {
-        link[i] = link[i].replace(character_to_replace[j][0], character_to_replace[j][1]).replace(/^#*\s(.*?)/, '$1')
+    /*
+      見出し以外の行を削除し、残った見出し行をリスト化 heading する
+    */
+    var dfr = $.Deferred()
+    const list_array_pre = data.replace(/^[^#\n].*?$/gm, '').replace(/(\n(?=\n)|\n$)/g, '').split('\n')
+    list_array_length = list_array_pre.length
+    for (var i = 0; i <= list_array_length - 1; i++) {
+      list_array[i] = {'id': i, 'heading': list_array_pre[i].replace(/^#*?\s(.*)/, '$1'), 'indent': list_array_pre[i].replace(/(.*)/, indent_character.repeat(list_array_pre[i].replace(/^(#*?)\s.*$/, '$1').length - 1))}
+      if (i === list_array_length - 1) {
+        dfr.resolve()
       }
     }
-    // 処理した渡し値: link
-    const container = {"items": data['items'], "items_length": data['items_length'], "level": data['level'], "link": link}
-    dfr.resolve(container)
     return dfr.promise()
   })
-  .then(function(data) {
-    // 見出しレベルを items に適用する
-    const dfr = $.Deferred() 
-    var items = data['items']
-    const level = data['level']
-    const items_length = data['items_length']
-    for (var i = items_length - 1; i >= 1; i--) {
-      items[i] = items[i].replace(/(.*)/, indent_array[level[i] - 1] + '$1')
+  .then(function() {
+    var dfr = $.Deferred()
+    // 見出し文字列からリンク文字列 link を作成し、 GitHub によって置換される文字の処理を行う
+    const character_to_replace_length = character_to_replace.length
+    for (var i = 0; i <= list_array_length - 1; i++) {
+      for (var j = 0; j <= character_to_replace_length; j++) {
+        const work1 = list_array[i]['heading']
+        list_array[i]['link'] = work1.replace(character_to_replace[0][j], character_to_replace[1][i]).replace(/^#*\s(.*?)/, '$1')
+        if (i === list_array_length - 1 && j === character_to_replace_length) {
+          dfr.resolve()
+        }
+      }
     }
-    // 処理した渡し値: items
-    const container = {"items": items, "link": data['link']}
-    dfr.resolve(container)
     return dfr.promise()
   })
-  .then(function(data) {
-    // (***)[#***] を作る
-    const dfr = $.Deferred()
-    var items = data['items']
-    const link = data['link']
-    for (var i = items.length - 1; i >= 0; i--) {
-      items[i] = items[i].replace(/^(\t*)#*\s(.*)/, '$1* [$2]') + '(#' + link[i] + ')'
-    }
-    // 処理した渡し値: items
-    const container = {"items": data['items']}
-    dfr.resolve(container)
-    return dfr.promise()
-  })
-  .then(function(data) {
+  .then(function() {
     // TOC 生成
-    const dfr = $.Deferred()
-    const items = data['items']
-    var toc = ''
-    for (var i = 1; items.length - 1 >= i; i++) {
-      toc = toc + items[i] + '\n'
+    var dfr = $.Deferred()
+    var toc_data = ''
+    for (var i = 0; i <= list_array_length - 1; i++) {
+      toc_data = toc_data + list_array[i]['indent'] + '* [' + list_array[i]['heading'] + '](#' + list_array[i]['link'] + ')\n'
+      if (i === list_array_length - 1) {
+        dfr.resolve(toc_data)
+      }
     }
-    // 処理した渡し値: 
-    const container = toc
-    dfr.resolve(container)
     return dfr.promise()
-  }).then(function(data) {
+  })
+  .then(function(toc_data) {
     // 書き出し
-    const toc = data
-    $('#toc').text(toc)
+    $('#toc').text(toc_data)
   })
   function generateArrayFilled(length, items, fill) {
     var array = new Array(length)
