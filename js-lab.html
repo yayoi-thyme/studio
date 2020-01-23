@@ -1,0 +1,53 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+$(function() {
+  console.log(dateFormat('20200101'))
+  console.log(dateFormat('2020-01-01'))
+  console.log(dateFormat(20200101))
+  console.log(dateFormat(new Date('2020', '01', '01')))
+})
+function dateFormat(date, separator) {
+  let y
+  let m
+  let d
+  let dataType = Object.prototype.toString.call(date)
+  if (dataType.match('String')) {
+    if (date.length === 8) {
+      y = date.slice(0, 4)
+      m = date.slice(4, 6)
+      d = date.slice(-2)
+    } else {
+      dateProc = date.split(/[^\d]/)
+      y = ('000' + dateProc[0]).slice(-4)
+      m = ('0' + dateProc[1]).slice(-2)
+      d = ('0' + dateProc[2]).slice(-2)
+    }
+  } else if (dataType.match('Date')) {
+    y = ('000' + new Date(date).getFullYear()).slice(-4)
+    m = ('0' + new Date(date).getMonth()).slice(-2)
+    d = ('0' + new Date(date).getDate()).slice(-2)
+  } else if (dataType.match('Number')) {
+    y = String(date).slice(0, 4)
+    m = String(date).slice(4, 6)
+    d = String(date).slice(-2)
+  }
+ return y + separator + m + separator + d
+}
+</script>
+<input id="date" type="date" name="date" value="2020/01/01">
+
+
+
+
+
+
+
+
+
+  if (dataType.match('Date')) {
+    let yProc = new Date(date).getFullYear()
+    let mProc = new Date(date).getMonth() + 1
+    let dProc = new Date(date).getDate()
+    y = ('000' + yProc).slice(-4)
+    m = ('0' + mProc).slice(-2)
+    d = ('0' + dProc).slice(-2)
